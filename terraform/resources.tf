@@ -32,3 +32,20 @@ output "created_at" {
 output "size" {
   value = regcloud_server.example_server[*].size
 }
+
+output "server_ips" {
+    description = "List of server IPs"
+    value       = regcloud_server.example_server[*].ip
+}
+
+resource "local_file" "ansible_inventory" {
+  content = <<-EOT
+    [webservers]
+    %{ for s in regcloud_server.example_server ~}
+    %{ if s.ip != null }
+    ${s.ip} ansible_user=root ansible_ssh_private_key_file=/root/.ssh/id_ed25519
+    %{ endif }
+    %{ endfor ~}
+  EOT
+  filename = "${path.module}/../ansible/hosts.ini"
+}

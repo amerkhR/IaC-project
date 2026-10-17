@@ -1,0 +1,68 @@
+- hosts: webservers
+  become: yes
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+
+    - name: Install Apache2
+      apt:
+        name: apache2
+        state: present
+
+    - name: Configure Apache to listen on port 8080
+      lineinfile:
+        path: /etc/apache2/ports.conf
+        regexp: '^Listen 80'
+        line: 'Listen 8080'
+
+    - name: Configure default Apache virtual host to port 8080
+      lineinfile:
+        path: /etc/apache2/sites-available/000-default.conf
+        regexp: '<VirtualHost \*:80>'
+        line: '<VirtualHost *:8080>'
+
+    - name: Restart Apache to free port 80
+      service:
+        name: apache2
+        state: restarted
+
+    - name: Install Nginx and Node Exporter
+      apt:
+        name:
+          - nginx
+          - prometheus-node-exporter
+        state: present
+
+    - name: Create a custom index.html for testing
+      copy:
+        content: "Hello from Rashid's server {{ ansible_hostname }} (Web + Monitoring active)!\n"
+        dest: /var/www/html/index.html
+
+    - name: Setup Nginx as a reverse proxy pointing to Apache
+      copy:
+        content: |
+          server {
+              listen 80;
+              server_name _;
+
+              location / {
+                  proxy_pass http://127.0.0.1:8080;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+              }
+          }
+        dest: /etc/nginx/sites-enabled/default
+      notify: Restart Nginx
+
+    - name: Ensure Node Exporter is enabled and running
+      service:
+        name: prometheus-node-exporter
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted
