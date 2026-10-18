@@ -41,7 +41,7 @@ output "server_ips" {
 resource "local_file" "ansible_inventory" {
   content = <<-EOT
     [webservers]
-    %{ for ip in regcloud_server.example_server[*].ip_address ~}
+    %{ for ip in regcloud_server.example_server[*].ip ~}
     ${ip} ansible_user=root ansible_ssh_private_key_file=/home/user/.ssh/id_ed25519
     %{ endfor ~}
   EOT
