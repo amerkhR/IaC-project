@@ -2,3 +2,4 @@
 *.tfstate
 *.tfstate.*
 schema.json
+hosts.ini
