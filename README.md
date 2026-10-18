@@ -17,3 +17,9 @@ Prometheus корректно собирает метрики:
 
 А Grafana их визуализирует:
 <img width="1920" height="888" alt="изображение" src="https://github.com/user-attachments/assets/b36775b0-49b9-4577-ae3f-409f2de2a35e" />
+
+CI/CD:
+<img width="2876" height="1316" alt="изображение" src="https://github.com/user-attachments/assets/b660c5f1-a1d2-4fd0-bee2-b089f80457ee" />
+
+<img width="2879" height="1456" alt="изображение" src="https://github.com/user-attachments/assets/f2f59e29-2a87-4a79-8cc7-b7d4f373ec61" />
+
