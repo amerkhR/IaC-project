@@ -1,0 +1,65 @@
+name: IaC CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: terraform-ansible-deploy
+  cancel-in-progress: false
+
+env:
+  TF_VAR_token: ${{ secrets.REGCLOUD_TOKEN }}
+  TF_VAR_api_url: ${{ secrets.REGCLOUD_API_URL }}
+  ANSIBLE_HOST_KEY_CHECKING: "False"
+
+jobs:
+  validate:
+    name: "Validate Code"
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Validate Terraform configuration
+        working-directory: ./terraform
+        run: |
+          terraform init -input=false
+          terraform validate
+
+      - name: Check Ansible playbook syntax
+        working-directory: ./ansible
+        run: |
+          ansible-playbook playbook.yaml --syntax-check
+
+  deploy:
+    name: "Deploy Infrastructure"
+    needs: validate
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Apply Terraform changes
+        working-directory: ./terraform
+        run: |
+          terraform init -input=false
+          terraform apply -auto-approve -input=false
+
+      - name: Verify generated hosts.ini
+        working-directory: ./ansible
+        run: |
+          echo "=== Actual hosts.ini  ==="
+          cat hosts.ini
+
+      - name: Wait for SSH connection on target servers
+        working-directory: ./ansible
+        run: |
+          ansible webservers -i hosts.ini -m wait_for_connection -a "timeout=60"
+
+      - name: Run Ansible playbook
+        working-directory: ./ansible
+        run: |
+          ansible-playbook -i hosts.ini playbook.yaml
