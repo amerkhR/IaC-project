@@ -1,6 +1,6 @@
 resource "regcloud_ssh_key" "timeweb_server" {
   name = "timeweb_server"
-  public_key = file("~/.ssh/id_ed25519.pub")
+  public_key = file("/root/.ssh/id_ed25519.pub")
 }
 
 output "ssh_key_fingerprint" {
